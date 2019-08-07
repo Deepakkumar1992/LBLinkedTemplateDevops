@@ -1,0 +1,64 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "loadBalancers_name": {
+            "defaultValue": "mylb",
+            "type": "string"
+        },
+        "publicIPAddresses_name": {
+            "defaultValue": "myip",
+            "type": "string"
+        },
+        "SASToken": {
+            "type": "string",
+            "defaultValue": "?sv=2018-03-28&ss=bft&srt=sco&sp=rwdlacu&se=2019-08-07T21:34:56Z&st=2019-08-07T13:34:56Z&spr=https&sig=jx%2FuNNk0CRSqBA9hnUTD57B%2FZCBkNuA2g9y1hAnAAJM%3D"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/loadBalancers",
+            "apiVersion": "2018-11-01",
+            "name": "[parameters('loadBalancers_name')]",
+            "location": "eastus",
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "LoadBalancerFrontEnd",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[reference('linkedTemplate').outputs.resourceID.value]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [],
+                "loadBalancingRules": [],
+                "probes": [],
+                "inboundNatRules": [],
+                "outboundNatRules": [],
+                "inboundNatPools": []
+            },
+            "dependsOn": [
+                "linkedTemplate"
+            ]
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "linkedTemplate",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat('https://teststorage0101.blob.core.windows.net/demo/pip.json', parameters('SASToken'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters":{
+                    "publicIPAddresses_name":{"value": "[parameters('publicIPAddresses_name')]"}
+                }
+            }
+        }
+    ]
+}
